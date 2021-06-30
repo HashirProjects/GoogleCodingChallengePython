@@ -302,7 +302,39 @@ class VideoPlayer:
         Args:
             search_term: The query to be used in search.
         """
-        print("search_videos needs implementation")
+        videoList = []
+
+        for video in self._video_library.get_all_videos():
+
+            if video.title.lower().find(search_term.lower()) >= 0:
+                videoList.append(video)
+
+        if len(videoList) > 0:
+            videoList.sort(key= lambda x: x.title)
+
+            print(f"Here are the results for {search_term}:")
+
+            for i in range(len(videoList)):
+
+                tagStr = ""
+                for tag in videoList[i].tags:
+                    tagStr += tag + " "
+                tagStr = tagStr[:-1]
+
+                print (f"  {i+1}) {videoList[i].title} ({videoList[i].video_id}) [{tagStr}]")
+
+            print("Would you like to play any of the above? If yes, specify the number of the video.")
+            print("If your answer is not a valid number, we will assume it's a no.")
+
+            videoIndex= input("")
+            try:   
+                videoID= videoList[int(videoIndex)-1].video_id
+                self.play_video(videoID)
+            except:
+                pass
+
+        else:
+            print(f"No search results for {search_term}")
 
     def search_videos_tag(self, video_tag):
         """Display all videos whose tags contains the provided tag.
@@ -310,7 +342,41 @@ class VideoPlayer:
         Args:
             video_tag: The video tag to be used in search.
         """
-        print("search_videos_tag needs implementation")
+
+        videoList = []
+
+        for video in self._video_library.get_all_videos():
+            for tag in video.tags:
+
+                if tag.lower().find(video_tag.lower()) >= 0:
+                    videoList.append(video)
+
+        if len(videoList) > 0:
+            videoList.sort(key= lambda x: x.title)
+
+            print(f"Here are the results for {video_tag}:")
+
+            for i in range(len(videoList)):
+
+                tagStr = ""
+                for tag in videoList[i].tags:
+                    tagStr += tag + " "
+                tagStr = tagStr[:-1]
+
+                print (f"  {i+1}) {videoList[i].title} ({videoList[i].video_id}) [{tagStr}]")
+
+            print("Would you like to play any of the above? If yes, specify the number of the video.")
+            print("If your answer is not a valid number, we will assume it's a no.")
+
+            videoIndex= input("")
+            try:   
+                videoID= videoList[int(videoIndex)-1].video_id
+                self.play_video(videoID)
+            except:
+                pass
+
+        else:
+            print(f"No search results for {video_tag}")
 
     def flag_video(self, video_id, flag_reason=""):
         """Mark a video as flagged.
