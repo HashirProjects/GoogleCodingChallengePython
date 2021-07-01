@@ -28,7 +28,11 @@ class VideoPlayer:
                 tagStr += tag + " "
             tagStr = tagStr[:-1]
 
-            videoList.append(f"  {video.title} ({video.video_id}) [{tagStr}]")
+            if video.flags == []:
+                videoList.append(f"{video.title} ({video.video_id}) [{tagStr}]")
+
+            else:
+                videoList.append(f"{video.title} ({video.video_id}) [{tagStr}] - FLAGGED {video.flags[0]}")
 
         videoList.sort()
 
@@ -46,15 +50,19 @@ class VideoPlayer:
         """
 
         try:
-            new_video_title = self._video_library.get_video(video_id).title
+            new_video = self._video_library.get_video(video_id)
 
-            if self.current_video["title"] != "":
-                print(f"Stopping video: {self.current_video['title']}")
+            if new_video.flags == []:
+                if self.current_video["title"] != "":
+                    print(f"Stopping video: {self.current_video['title']}")
 
-            self.current_video["title"] = new_video_title
-            self.current_video["paused"] = False
+                self.current_video["title"] = new_video.title
+                self.current_video["paused"] = False
 
-            print(f"Playing video: {self.current_video['title']}")
+                print(f"Playing video: {self.current_video['title']}")
+            else:
+                print(f"Cannot play video: Video is currently flagged {new_video.flags[0]}")
+
         except:
             print("Cannot play video: Video does not exist")
 
@@ -75,16 +83,19 @@ class VideoPlayer:
         videoList = []
 
         for video in self._video_library.get_all_videos():
-
-            videoList.append(video.title)
+            if len(video.flags) <= 0:
+                videoList.append(video.title)
 
         if self.current_video["title"] != "":
                 print(f"Stopping video: {self.current_video['title']}")
+        try:
+            self.current_video["title"]= random.choice(videoList)
+            self.current_video["paused"]= False
 
-        self.current_video["title"]= random.choice(videoList)
-        self.current_video["paused"]= False
+            print(f"Playing video: {self.current_video['title']}")
+        except:
+            print("No videos available")
 
-        print(f"Playing video: {self.current_video['title']}")
 
     def pause_video(self):
         """Pauses the current video."""
@@ -160,7 +171,7 @@ class VideoPlayer:
 
             if not nameAlreadyUsed:
                 self.current_playlists[playlist_name.lower()]=Playlist(playlist_name)
-                print(f"Successfully created new playlist: {playlist_name}")        
+                print(f"Successfully created new playlist: {playlist_name}")
 
 
     def add_to_playlist(self, playlist_name, video_id):
@@ -229,7 +240,11 @@ class VideoPlayer:
                             tagStr += tag + " "
                         tagStr = tagStr[:-1]
 
-                        print(f"  {video.title} ({video.video_id}) [{tagStr}]")
+                        if video.flags == []:
+                            print(f"  {video.title} ({video.video_id}) [{tagStr}]")
+
+                        else:
+                            print(f"{video.title} ({video.video_id}) [{tagStr}] - FLAGGED {video.flags[0]}")
 
         if not playlistExists:
             print(f"Cannot show playlist {playlist_name}: Playlist does not exist")
@@ -306,7 +321,7 @@ class VideoPlayer:
 
         for video in self._video_library.get_all_videos():
 
-            if video.title.lower().find(search_term.lower()) >= 0:
+            if video.title.lower().find(search_term.lower()) >= 0 and video.flags == []:
                 videoList.append(video)
 
         if len(videoList) > 0:
@@ -348,7 +363,7 @@ class VideoPlayer:
         for video in self._video_library.get_all_videos():
             for tag in video.tags:
 
-                if tag.lower().find(video_tag.lower()) >= 0:
+                if tag.lower().find(video_tag.lower()) >= 0  and video.flags == []:
                     videoList.append(video)
 
         if len(videoList) > 0:
@@ -385,7 +400,30 @@ class VideoPlayer:
             video_id: The video_id to be flagged.
             flag_reason: Reason for flagging the video.
         """
-        print("flag_video needs implementation")
+        videoExists=False
+        for video in self._video_library.get_all_videos():
+
+            if video.video_id == video_id:
+                videoExists=True
+                if len(video.flags) <= 0:
+
+                    if self.current_video["title"] == video.title:
+                        print(f"Stopping video: {self.current_video['title']}")
+                        self.current_video["title"] = ""
+                        self.current_video["paused"] = False
+
+                    if flag_reason == "":
+                        video.flags.append("(reason: Not supplied)")
+                        print(f"Successfully flagged video: {video.title} (reason: Not supplied)")
+                    else:
+                        video.flags.append(f"(reason: {flag_reason})")
+                        print(f"Successfully flagged video: {video.title} (reason: {flag_reason})")
+                else:
+                    print("Cannot flag video: Video is already flagged")
+
+        if not videoExists:
+            print("Cannot flag video: Video does not exist")
+
 
     def allow_video(self, video_id):
         """Removes a flag from a video.
@@ -393,4 +431,18 @@ class VideoPlayer:
         Args:
             video_id: The video_id to be allowed again.
         """
-        print("allow_video needs implementation")
+        videoExists=False
+        for video in self._video_library.get_all_videos():
+
+            if video.video_id == video_id:
+                videoExists=True
+                if len(video.flags) > 0:
+
+                    video.flags = []
+                    print(f"Successfully removed flag from video: {video.title}")
+
+                else:
+                    print("Cannot remove flag from video: Video is not flagged")
+
+        if not videoExists:
+            print("Cannot remove flag from video: Video does not exist")

@@ -9,13 +9,18 @@ class Playlist:
 
     def add_video(self, video, playlist_name):
         videoExists= False
+        flagged = False
 
         for existingVideo in self.videos:
             if existingVideo == video:
                 videoExists = True
                 print(f"Cannot add video to {playlist_name}: Video already added")
 
-        if not videoExists:
+        if video.flags != []:
+                    print(f"Cannot add video to {playlist_name}: Video is currently flagged {video.flags[0]}")
+                    flagged = True
+
+        if (not videoExists) and (not flagged):
             self.videos.append(video)
             print(f"Added video to {playlist_name}: {video.title}")
 
